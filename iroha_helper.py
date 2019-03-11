@@ -28,8 +28,11 @@ class IrohaHelper:
         print('Transaction hash = {}, creator = {}'.format(
             hex_hash, transaction.payload.reduced_payload.creator_account_id))
         self.net.send_tx(transaction)
+        res = ''
         for status in self.net.tx_status_stream(transaction):
             print(status)
+            res += str(status) + '\n'
+        return res
 
 
     def add_coin_to_admin(self):
@@ -61,11 +64,11 @@ class IrohaHelper:
         Transfer 2.00 'coin#domain' from 'admin@test' to 'userone@domain'
         """
         tx = self.iroha.transaction([
-            self.iroha.command('TransferAsset', src_account_id=from_name + '@test', dest_account_id = to_name + '@test',
-                        asset_id='coin#domain', description='top up', amount=amount)
+            self.iroha.command('TransferAsset', src_account_id=from_name + '@test' if from_name == 'admin' else '@domain', dest_account_id = to_name + '@domain',
+                        asset_id='coin#domain', description='top up', amount=str(amount))
         ])
         IrohaCrypto.sign_transaction(tx, self.admin_private_key)
-        self.send_transaction_and_print_status(tx)
+        return self.send_transaction_and_print_status(tx)
 
 
     def userone_grants_to_admin_set_account_detail_permission(self):

@@ -6,7 +6,7 @@ from irohalib import Iroha, IrohaGrpc
 from irohalib import IrohaCrypto
 import binascii
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 iroha = Iroha('admin@test')
@@ -30,7 +30,7 @@ def get_info():
     if is_string_nil_or_empty(account_name):
         return json_response(False, "Please send your account name", {}, 404)
     else:
-        return irohaHelper.get_account_assets(account_name + '@test')
+        return irohaHelper.get_account_assets(account_name + ('@test' if account_name == 'admin' else '@domain'))
 
     #     response = MessageToDict(IrohaHelper.get_account(account_name))
     #     # in case we don't have account_name on network
@@ -53,11 +53,16 @@ def get_info():
 
 @app.route("/sendCoinsToUser", methods=["POST"])
 def send_coins_to_user():
-    fromUser = request.form['username_from']
-    toUser = request.form['username_to']
-    amount = request.form['amount']
-    irohaHelper.transfer_coin_from_user_to_user(fromUser, toUser, amount)
+    content = request.get_json(force=True)
+    fromUser = content['username_from']
+    toUser = content['username_to']
+    amount = content['amount']
+    return irohaHelper.transfer_coin_from_user_to_user(fromUser, toUser, amount)
 
+
+@app.route('/getuserinfo')
+def getUserInfo():
+    return render_template('info.html')
 
 
 def json_response(is_success, message, data, status_code):
@@ -76,3 +81,6 @@ def is_string_nil_or_empty(string):
     return False
     # user_private_key = IrohaCrypto.private_key()
     # user_public_key = IrohaCrypto.derive_public_key(user_private_key)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
