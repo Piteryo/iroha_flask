@@ -19,14 +19,17 @@ def initialize_iroha():
 
     irohaHelper.create_domain_and_asset()
     irohaHelper.add_coin_to_admin()
+    irohaHelper.create_account('fabric', user_public_key)
+    
+    user_private_key = IrohaCrypto.private_key()
+    user_public_key = IrohaCrypto.derive_public_key(user_private_key)
     irohaHelper.create_account('fabric', user_public_key)   
 
 
 initialize_iroha()
 
-@app.route("/getAccountInfo", methods=["GET"])
-def get_info():
-    account_name = request.args.get("account_name")
+#@app.route("/getAccountInfo", methods=["GET"])
+def get_info(account_name):
     if is_string_nil_or_empty(account_name):
         return json_response(False, "Please send your account name", {}, 404)
     else:
@@ -62,7 +65,9 @@ def send_coins_to_user():
 
 @app.route('/getuserinfo')
 def getUserInfo():
-    return render_template('info.html')
+    account_name = request.args.get("account_name")
+    balance = get_info(account_name)
+    return render_template('info.html', name=account_name, money=balance)
 
 
 def json_response(is_success, message, data, status_code):

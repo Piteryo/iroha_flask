@@ -106,7 +106,6 @@ class IrohaHelper:
         data = response.account_assets_response.account_assets  
         info = ''
         for asset in data:
-            info += 'Asset id = {}, balance = {}'.format(
-                asset.asset_id, asset.balance) + '\n'
+            info = asset.balance
 
         return info
