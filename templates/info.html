@@ -8,7 +8,25 @@
     </head>
     <body>
         <h1>Info about {{ name }}!</h1>
-        <p>Amount of money: {{ money }}</p>
+        <p>Amount of assets:</p>
+        {% for asset, balance in assets.items() %}
+        <p>{{ asset }}: {{ balance }}</p>
+        {% endfor %}
+        
+        {% for user in users %}
+            {% for coin in user[1] %}
+                {% if coin in assets.keys() %}
+                    <h2>Send to {{ user[0] }} coin {{ coin }}</h2>
+                    <form method="post" action="/sendCoinsToUser">
+                        <input type="text" name='numberOfCoins'/>
+                        <input type="hidden" name='username_from' value='{{ name }}'/>
+                        <input type="hidden" name='username_to' value="{{ user[0] }}" />
+                        <input type="hidden" name='coin' value='{{ coin }}'/>
+                        <input type="submit" value="Submit" name="Send coins"/>
+                    </form>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
     </body>
 
 </html>

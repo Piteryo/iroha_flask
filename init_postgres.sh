@@ -3,6 +3,8 @@
 sudo docker stop $(sudo docker ps -aq)
 sudo docker system prune --volumes
 
+rm -rf *@test.priv
+
 sudo docker volume create blockstore1
 sudo docker volume create blockstore2
 sudo docker volume create blockstore3

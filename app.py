@@ -14,17 +14,10 @@ net = IrohaGrpc()
 irohaHelper = IrohaHelper('f101537e319568c765b2cc89698325604991dca57b9716b58016b253506cab70', iroha, net)
 
 def initialize_iroha():
-    user_private_key = IrohaCrypto.private_key()
-    user_public_key = IrohaCrypto.derive_public_key(user_private_key)
-
     irohaHelper.create_domain_and_asset()
+    irohaHelper.create_accounts()
     irohaHelper.add_coin_to_admin()
-    irohaHelper.create_account('fabric', user_public_key)
-    
-    user_private_key = IrohaCrypto.private_key()
-    user_public_key = IrohaCrypto.derive_public_key(user_private_key)
-    irohaHelper.create_account('fabric', user_public_key)   
-
+    #irohaHelper.grant_permissions()
 
 initialize_iroha()
 
@@ -33,7 +26,7 @@ def get_info(account_name):
     if is_string_nil_or_empty(account_name):
         return json_response(False, "Please send your account name", {}, 404)
     else:
-        return irohaHelper.get_account_assets(account_name + ('@test' if account_name == 'admin' else '@domain'))
+        return irohaHelper.get_account_assets(account_name)
 
     #     response = MessageToDict(IrohaHelper.get_account(account_name))
     #     # in case we don't have account_name on network
@@ -56,18 +49,24 @@ def get_info(account_name):
 
 @app.route("/sendCoinsToUser", methods=["POST"])
 def send_coins_to_user():
-    content = request.get_json(force=True)
-    fromUser = content['username_from']
-    toUser = content['username_to']
-    amount = content['amount']
-    return irohaHelper.transfer_coin_from_user_to_user(fromUser, toUser, amount)
+    fromUser = request.form.get('username_from')
+    toUser = request.form.get('username_to')
+    amount = request.form.get('numberOfCoins')
+    coin = request.form.get('coin')
+    result = irohaHelper.transfer_coin_from_user_to_user(fromUser, toUser, amount, coin)
+    return 'ERROR!' if 'REJECTED' in result else 'SUCCESS'
 
 
 @app.route('/getuserinfo')
 def getUserInfo():
     account_name = request.args.get("account_name")
-    balance = get_info(account_name)
-    return render_template('info.html', name=account_name, money=balance)
+    assets = get_info(account_name)
+    users_in_html = []
+    users = irohaHelper.accounts[account_name]['peer_users']
+    for user in users:
+        users_in_html.append((user, irohaHelper.accounts[user]['coins']))
+    return render_template('info.html', name=account_name, assets=assets,
+     users=users_in_html)
 
 
 def json_response(is_success, message, data, status_code):
